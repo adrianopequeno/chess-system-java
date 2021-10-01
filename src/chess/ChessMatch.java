@@ -48,6 +48,10 @@ public class ChessMatch {
 	private void validateSourcePosition(Position position) {
 		if (!board.thereIsAPiace(position))
 			throw new ChessException("Nao existe peça na posiçao de origem!");
+		
+		// verifica se exist emovimentos possiveis para a peça
+		if (!board.piece(position).isThereAnyPossibleMove())
+			throw new ChessException("Nao existe moviementos possiveis para a peça escolhida!");
 	}
 
 	private void placeNewPiece(Character column, Integer row, ChessPiece piece) {
