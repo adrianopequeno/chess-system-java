@@ -7,12 +7,25 @@ import chess.pieces.King;
 import chess.pieces.Rook;
 
 public class ChessMatch {
+	
+	private Integer turn;
+	private Color currentPlayer;
 
 	private Board board;
 
 	public ChessMatch() {
 		board = new Board(8, 8);
+		turn = 1;
+		currentPlayer = Color.WHITE;
 		initialSetup();
+	}
+	
+	public int getTurn() {
+		return turn;
+	}
+	
+	public Color getCurrentPlayer() {
+		return currentPlayer;
 	}
 
 	public ChessPiece[][] getPieces() {
@@ -39,6 +52,8 @@ public class ChessMatch {
 		validateTargetPosition(source, target);
 		Piece capturedPiece = makeMove(source, target);
 		
+		nexTurn(); // troca o turno das chogadas
+		
 		return (ChessPiece) capturedPiece; // retorna a peça capturada
 	}
 	
@@ -56,6 +71,10 @@ public class ChessMatch {
 		if (!board.thereIsAPiace(position))
 			throw new ChessException("Nao existe peça na posiçao de origem!");
 		
+		// Exceçao, caso o jogador esteja movendo uma peça contraria da sua
+		if (currentPlayer != ((ChessPiece) board.piece(position)).getColor())
+			throw new ChessException("A peça escolhida nao é sua!");
+		
 		// verifica se exist emovimentos possiveis para a peça
 		if (!board.piece(position).isThereAnyPossibleMove())
 			throw new ChessException("Nao existe moviementos possiveis para a peça escolhida!");
@@ -64,6 +83,11 @@ public class ChessMatch {
 	private void validateTargetPosition(Position source, Position target) {
 		if (!board.piece(source).possivelMove(target))
 			throw new ChessException("A peça escolhida nao pode se mover para a possiçao de destino!");
+	}
+	
+	private void nexTurn() {
+		turn++;
+		currentPlayer = (currentPlayer == Color.WHITE) ? Color.BLACK : Color.WHITE;
 	}
 
 	private void placeNewPiece(Character column, Integer row, ChessPiece piece) {

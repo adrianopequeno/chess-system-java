@@ -19,7 +19,7 @@ public class Program {
 		while (true) {
 			try {
 				UI.clearScreen(); // limpa a tela
-				UI.printBoard(chessMatch.getPieces());
+				UI.printMatch(chessMatch);
 				System.out.println();
 				System.out.print("Source: "); // entrando com a posicao de origem
 				ChessPosition source = UI.readChessPosition(sc);
