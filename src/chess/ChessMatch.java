@@ -2,6 +2,8 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import boardgame.Board;
 import boardgame.Piece;
@@ -14,6 +16,7 @@ public class ChessMatch {
 	private Integer turn;
 	private Color currentPlayer;
 	private Board board;
+	private boolean check;
 
 	private List<Piece> piecesOnTheBoard = new ArrayList<>();
 	private List<Piece> capturedPices = new ArrayList<>();
@@ -31,6 +34,10 @@ public class ChessMatch {
 
 	public Color getCurrentPlayer() {
 		return currentPlayer;
+	}
+	
+	public boolean getCheck() {
+		return check;
 	}
 
 	public ChessPiece[][] getPieces() {
@@ -56,6 +63,14 @@ public class ChessMatch {
 		validateSourcePosition(source);
 		validateTargetPosition(source, target);
 		Piece capturedPiece = makeMove(source, target);
+		
+		if (testCheck(currentPlayer)) {
+			undoMove(source, target, capturedPiece);
+			throw new ChessException("Voce nao pode se colocar em CHECK!");
+		}
+		
+		// testa se o openent ficou em check
+		check = (testCheck(opponent(currentPlayer))) ? true : false;
 
 		nexTurn(); // troca o turno das chogadas
 
@@ -74,6 +89,18 @@ public class ChessMatch {
 		}
 
 		return capturedPice;
+	}
+
+	// Método que desfaz o movimento de uma peça
+	private void undoMove(Position source, Position target, Piece capturedPiece) {
+		Piece p = board.removePiece(target);
+		board.placePiece(p, source);
+
+		if (capturedPiece != null) {
+			board.placePiece(capturedPiece, target);
+			capturedPices.remove(capturedPiece);
+			piecesOnTheBoard.add(capturedPiece);
+		}
 	}
 
 	// Método que valida a posiçao de origem da peça
@@ -98,6 +125,37 @@ public class ChessMatch {
 	private void nexTurn() {
 		turn++;
 		currentPlayer = (currentPlayer == Color.WHITE) ? Color.BLACK : Color.WHITE;
+	}
+
+	private Color opponent(Color color) {
+		return (color == Color.WHITE) ? Color.BLACK : Color.WHITE;
+	}
+
+	private ChessPiece king(Color color) {
+		List<Piece> list = piecesOnTheBoard.stream().filter(x -> ((ChessPiece) x).getColor() == color)
+				.collect(Collectors.toList());
+		for (Piece p : list) {
+			if (p instanceof King)
+				return (ChessPiece) p;
+		}
+		throw new IllegalStateException("Nao existe o rei " + color + " no tabuleiro!");
+	}
+
+	// Metodo que verifica os movimentos de uma peça adversaria
+	// para saber se ela pode ameçar o rei
+	private boolean testCheck(Color color) {
+		Position kingPosition = king(color).getChessPosition().toPosition(); // pega a posiçao do rei em formato de
+																				// matriz
+		List<Piece> opponentPieces = piecesOnTheBoard.stream()
+				.filter(x -> ((ChessPiece) x).getColor() == opponent(color)).collect(Collectors.toList());
+
+		for (Piece p : opponentPieces) {
+			boolean[][] mat = p.possibleMoves(); // movimentos possiveis da peça adversaria
+
+			if (mat[kingPosition.getRow()][kingPosition.getColumn()])
+				return true;
+		}
+		return false;
 	}
 
 	// Método que coloca as peças no tabuleiro
