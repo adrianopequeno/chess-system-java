@@ -59,9 +59,16 @@ public class UI {
 		printCapturePieces(captured);
 		System.out.println();
 		System.out.println("Turno: " + chessMath.getTurn());
-		System.out.println("Esperando o Jogador: " + chessMath.getCurrentPlayer());
-		
-		if (chessMath.getCheck()) System.out.println("CHECK!");
+
+		if (!chessMath.getCheckMate()) {
+			System.out.println("Esperando o Jogador: " + chessMath.getCurrentPlayer());
+
+			if (chessMath.getCheck())
+				System.out.println("CHECK!");
+		} else {
+			System.out.println("CHECKMATE!");
+			System.out.println("Vencedor: " + chessMath.getCurrentPlayer());
+		}
 	}
 
 	public static void printBoard(ChessPiece[][] pieces) {
@@ -110,7 +117,7 @@ public class UI {
 				.collect(Collectors.toList()); // filtra todas as peças brancas
 		List<ChessPiece> black = captured.stream().filter(x -> x.getColor() == Color.BLACK)
 				.collect(Collectors.toList()); // filtra todas as peças pretas
-		
+
 		System.out.println("Peças capturadas:");
 		System.out.print("Brancas: ");
 		System.out.print(ANSI_WHITE);
