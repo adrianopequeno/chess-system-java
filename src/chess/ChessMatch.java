@@ -1,5 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import boardgame.Board;
 import boardgame.Piece;
 import boardgame.Position;
@@ -7,11 +10,13 @@ import chess.pieces.King;
 import chess.pieces.Rook;
 
 public class ChessMatch {
-	
+
 	private Integer turn;
 	private Color currentPlayer;
-
 	private Board board;
+
+	private List<Piece> piecesOnTheBoard = new ArrayList<>();
+	private List<Piece> capturedPices = new ArrayList<>();
 
 	public ChessMatch() {
 		board = new Board(8, 8);
@@ -19,11 +24,11 @@ public class ChessMatch {
 		currentPlayer = Color.WHITE;
 		initialSetup();
 	}
-	
+
 	public int getTurn() {
 		return turn;
 	}
-	
+
 	public Color getCurrentPlayer() {
 		return currentPlayer;
 	}
@@ -37,9 +42,9 @@ public class ChessMatch {
 		}
 		return mat;
 	}
-	
+
 	public boolean[][] possibleMoves(ChessPosition sourcePosition) {
-		Position position  = sourcePosition.toPosition();
+		Position position = sourcePosition.toPosition();
 		validateSourcePosition(position);
 		return board.piece(position).possibleMoves();
 	}
@@ -47,51 +52,58 @@ public class ChessMatch {
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
 		Position source = sourcePosition.toPosition();
 		Position target = targetPosition.toPosition();
-		
+
 		validateSourcePosition(source);
 		validateTargetPosition(source, target);
 		Piece capturedPiece = makeMove(source, target);
-		
+
 		nexTurn(); // troca o turno das chogadas
-		
+
 		return (ChessPiece) capturedPiece; // retorna a peça capturada
 	}
-	
+
 	// Método que movimento a peça
 	private Piece makeMove(Position source, Position target) {
 		Piece p = board.removePiece(source);// retira a peça da posicao de origem
 		Piece capturedPice = board.removePiece(target);// remove a possivel peça que esta na posicao de destino
 		board.placePiece(p, target);// coloca a peça da posicao de origem no lugar da peça da posicao de destino
-		
+
+		if (capturedPice != null) {
+			piecesOnTheBoard.remove(capturedPice);// remove a peça da lista de peças do tabuleiro
+			capturedPices.add(capturedPice);// add a peça capturada na lista de peças capturadas
+		}
+
 		return capturedPice;
 	}
-	
+
 	// Método que valida a posiçao de origem da peça
 	private void validateSourcePosition(Position position) {
 		if (!board.thereIsAPiace(position))
 			throw new ChessException("Nao existe peça na posiçao de origem!");
-		
+
 		// Exceçao, caso o jogador esteja movendo uma peça contraria da sua
 		if (currentPlayer != ((ChessPiece) board.piece(position)).getColor())
 			throw new ChessException("A peça escolhida nao é sua!");
-		
+
 		// verifica se exist emovimentos possiveis para a peça
 		if (!board.piece(position).isThereAnyPossibleMove())
 			throw new ChessException("Nao existe moviementos possiveis para a peça escolhida!");
 	}
-	
+
 	private void validateTargetPosition(Position source, Position target) {
 		if (!board.piece(source).possivelMove(target))
 			throw new ChessException("A peça escolhida nao pode se mover para a possiçao de destino!");
 	}
-	
+
 	private void nexTurn() {
 		turn++;
 		currentPlayer = (currentPlayer == Color.WHITE) ? Color.BLACK : Color.WHITE;
 	}
 
+	// Método que coloca as peças no tabuleiro
 	private void placeNewPiece(Character column, Integer row, ChessPiece piece) {
 		board.placePiece(piece, new ChessPosition(column, row).toPosition());
+		piecesOnTheBoard.add(piece);
 	}
 
 	// metodo que aplica a posiçao das peças no tabuleiro
